@@ -9,12 +9,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     if request:
         try:
-            url = "mongodb://azureudacitylearning:XdZFk4lBJCtfA4SWQgkaB2Oj16NtxUxonlsDCs0NmRrx7fNn7c68mgMSyIlGPJReVNWeczCc7xKvACDbyeLmtg==@azureudacitylearning.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@azureudacitylearning@"
+            url = "mongodb://udacitylearning-cosmosdb:FETtwPFV1EMJjGvseUaxkm8JZ1jPX4PclVydZcRfKlAsOecgdJ43UlJo1nyYdlt36h4Iifk49LjTACDbA2kUnQ==@udacitylearning-cosmosdb.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@udacitylearning-cosmosdb@"
             client = pymongo.MongoClient(url)
             database = client['azure']
             collection = database['advertisements']
             
-            filter_query = {'_id': ObjectId(id)}
+            filter_query = {'_id': id}
             update_query = {"$set": eval(request)}
             rec_id1 = collection.update_one(filter_query, update_query)
             return func.HttpResponse(status_code=200)

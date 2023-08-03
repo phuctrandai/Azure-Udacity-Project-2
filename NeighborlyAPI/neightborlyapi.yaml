@@ -1,0 +1,196 @@
+data:
+  FUNCTIONS_WORKER_RUNTIME: cHl0aG9u
+  AzureWebJobsStorage: RGVmYXVsdEVuZHBvaW50c1Byb3RvY29sPWh0dHBzO0FjY291bnROYW1lPXVkYWNpdHlhenVyZWxlYXJuaW5nO0FjY291bnRLZXk9YTlKb2VFSEQwVS9VVFhWaEQ1S0kwMFl0cXpJYnA4Q2RWallnZ3lhUEhsQkZGemFYcStWUHViSVJFM3lNa1p1UjdUVXNyRUtTeEsxYitBU3RLV3FpQXc9PTtFbmRwb2ludFN1ZmZpeD1jb3JlLndpbmRvd3MubmV0
+apiVersion: v1
+kind: Secret
+metadata:
+  name: neightborlyapi
+---
+data:
+  host.master: YXk0ZVYtYU5aU21sU3VxWldSRnNpeHpTdU5WV1NwU2wyOUkyT2VUZElDMm5BekZ1N25wZU5RPT0=
+  host.function.default: NGJoSzBoczkxZGRxTk9oaGU0eTNycUdpU290Q1pDTkRVcE5GVjJwMW9XVkJBekZ1MDNkTFJRPT0=
+  host.systemKey.default: d1ZpcmJVeU95V2lkLUljd2doRzZGNktzbXpDV3preGR2bTgzdVBvM2pqUFVBekZ1dWI2S0xBPT0=
+  functions.createadvertisement.default: U3FpWGRYWHlKN2piSkRjYTdVZlR5VGdYYzVkUDdZanNiMVlOV2Z4Vlo5U3RBekZ1R0lTQkJBPT0=
+  functions.deleteadvertisement.default: V0ZkbjB6UFVzQjl2aDNEUEV0YTc0UzktcHA2c3NEbWE0S2tBVkplaEtobE1BekZ1ckhyMF93PT0=
+  functions.getadvertisement.default: MF9UajJhMmwzTFRweXRhRWpHU1Ywc2RNMEZRa1owZlZObnB4b1kzS1BiQkdBekZ1cUhoZE13PT0=
+  functions.getadvertisements.default: dllsdzloNTlwLUJZbTYzTFJUMzFrZkFIS2hFU3JBUmw3Qk1sZlZhZTV3MGlBekZ1Um5sOFBBPT0=
+  functions.getpost.default: THhMdE1LOXNfQ2VlZl9IbEYyOUZ2WVNlZnBYZEdEb3pxLWlHZXlHOGE0X01BekZ1OFVySGt3PT0=
+  functions.getposts.default: VVlwV0JVcHFWTmd5RkRVb2w0ZTh2anczT3ZjY25nUUo1MDNxX2kzWnRpVTdBekZ1bXRNYy13PT0=
+  functions.updateadvertisement.default: cVY2SjBxc0Z1RERfV1RnWXA1ZER1dHAtNmp0djBGeEJBY2ZHV1ZoM1BuTEtBekZ1TmJkY25nPT0=
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func-keys-kube-secret-neightborlyapi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neightborlyapi-function-keys-identity-svc-act
+---
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  - configMaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: functions-keys-manager-role
+---
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: functions-keys-manager-role
+subjects:
+- kind: ServiceAccount
+  name: neightborlyapi-function-keys-identity-svc-act
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neightborlyapi-function-keys-identity-svc-act-functions-keys-manager-rolebinding
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neightborlyapi-http
+spec:
+  selector:
+    app: neightborlyapi-http
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neightborlyapi-http
+  labels:
+    app: neightborlyapi-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neightborlyapi-http
+  template:
+    metadata:
+      labels:
+        app: neightborlyapi-http
+    spec:
+      containers:
+      - name: neightborlyapi-http
+        image: udacitylearningacr/neightborlyapi:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: createAdvertisement
+        - name: AzureFunctionsJobHost__functions__1
+          value: deleteAdvertisement
+        - name: AzureFunctionsJobHost__functions__2
+          value: getAdvertisement
+        - name: AzureFunctionsJobHost__functions__3
+          value: getAdvertisements
+        - name: AzureFunctionsJobHost__functions__4
+          value: getPost
+        - name: AzureFunctionsJobHost__functions__5
+          value: getPosts
+        - name: AzureFunctionsJobHost__functions__6
+          value: updateAdvertisement
+        - name: AzureWebJobsSecretStorageType
+          value: kubernetes
+        - name: AzureWebJobsKubernetesSecretName
+          value: secrets/func-keys-kube-secret-neightborlyapi
+        envFrom:
+        - secretRef:
+            name: neightborlyapi
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+      serviceAccountName: neightborlyapi-function-keys-identity-svc-act
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neightborlyapi
+  labels:
+    app: neightborlyapi
+spec:
+  selector:
+    matchLabels:
+      app: neightborlyapi
+  template:
+    metadata:
+      labels:
+        app: neightborlyapi
+    spec:
+      containers:
+      - name: neightborlyapi
+        image: udacitylearningacr/neightborlyapi:latest
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: eventHubTrigger
+        envFrom:
+        - secretRef:
+            name: neightborlyapi
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+      serviceAccountName: neightborlyapi-function-keys-identity-svc-act
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: neightborlyapi
+  labels: {}
+spec:
+  scaleTargetRef:
+    name: neightborlyapi
+  triggers:
+  - type: eventgridtrigger
+    metadata:
+      direction: in
+      eventHubName: azureudacitylearning-eventhub
+      connection: Endpoint=sb://azureudacitylearning.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=JUCa1EL29HRucAJ3MQZrWZM7e6ZPnjlpH+AEhBDO7I0=;EntityPath=azureudacitylearning-eventhub
+---
+
