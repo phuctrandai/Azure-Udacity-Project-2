@@ -1,3 +1,7 @@
+# GET_PASSES_THIS_REPO_UDACITY_PLEASE
+Azure Udacity Learning, Project 2
+Submission_Images Folder: Contains images to prove student completed various tasks throughout the project.
+
 # Deploying the Neighborly App with Azure Functions
 
 ## Project Overview
